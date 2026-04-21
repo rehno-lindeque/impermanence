@@ -85,14 +85,11 @@ let
 
   inherit (allPersistentStoragePaths) files directories;
 
-  mountFile = pkgs.runCommand "persistence-mount-file"
-    {
-      nativeBuildInputs = [ pkgs.bash ];
-    } ''
-    cp ${./mount-file.bash} $out
-    substituteInPlace $out --replace-fail @cmp@ ${lib.getExe' pkgs.diffutils "cmp"}
-    patchShebangs $out
-  '';
+  mountFile = pkgs.writeShellApplication {
+    name = "persistence-mount-file";
+    runtimeInputs = [ pkgs.diffutils ];
+    text = builtins.replaceStrings ["@cmp@"] ["cmp"] (builtins.readFile ./mount-file.bash);
+  };
 
   mkPersistFile = { filePath, persistentStoragePath, method, enableDebugging, ... }:
     let
