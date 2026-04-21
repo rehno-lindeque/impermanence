@@ -87,6 +87,13 @@ let
 
   mountFile = pkgs.runCommand "persistence-mount-file" { buildInputs = [ pkgs.bash pkgs.coreutils ]; } ''
     cp ${./mount-file.bash} $out
+    substituteInPlace $out \
+      --replace-fail @cmp@ ${lib.getExe' pkgs.coreutils "cmp"} \
+      --replace-fail @mv@ ${lib.getExe' pkgs.coreutils "mv"} \
+      --replace-fail @mkdir@ ${lib.getExe' pkgs.coreutils "mkdir"} \
+      --replace-fail @rm@ ${lib.getExe' pkgs.coreutils "rm"} \
+      --replace-fail @touch@ ${lib.getExe' pkgs.coreutils "touch"} \
+      --replace-fail @ln@ ${lib.getExe' pkgs.coreutils "ln"}
     patchShebangs $out
   '';
 
