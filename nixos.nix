@@ -87,6 +87,7 @@ let
 
   mountFile = pkgs.runCommand "persistence-mount-file" { nativeBuildInputs = [ pkgs.bash ]; } ''
     cp ${./mount-file.bash} $out
+    substituteInPlace $out --replace-fail @coreutils@ ${pkgs.coreutils}/bin
     patchShebangs $out
   '';
 

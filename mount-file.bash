@@ -9,6 +9,8 @@ shopt -s inherit_errexit  # Inherit the errexit option status in subshells.
 # Print a useful trace when an error occurs
 trap 'echo Error when executing ${BASH_COMMAND} at line ${LINENO}! >&2' ERR
 
+export PATH="@coreutils@:$PATH"
+
 # Get inputs from command line arguments
 if [[ $# != 4 ]]; then
     echo "Error: 'mount-file.bash' requires *four* args." >&2
