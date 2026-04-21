@@ -202,6 +202,60 @@
               };
           in
           {
+            mount-file-reconciliation = pkgs.runCommand "mount-file-reconciliation"
+              {
+                nativeBuildInputs = [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.util-linux
+                ];
+              } ''
+              helper=${./mount-file.bash}
+              workdir=$(mktemp -d)
+              trap 'rm -rf "$workdir"' EXIT
+
+              mkdir -p "$workdir/etc/ssh" "$workdir/persistent/etc/ssh"
+
+              printf 'keydata' > "$workdir/etc/ssh/ssh_host_ed25519_key"
+              "$helper" \
+                "$workdir/etc/ssh/ssh_host_ed25519_key" \
+                "$workdir/persistent/etc/ssh/ssh_host_ed25519_key" \
+                reconcile \
+                0
+              test ! -L "$workdir/etc/ssh/ssh_host_ed25519_key"
+              test -f "$workdir/persistent/etc/ssh/ssh_host_ed25519_key"
+              diff "$workdir/persistent/etc/ssh/ssh_host_ed25519_key" "$workdir/etc/ssh/ssh_host_ed25519_key"
+
+              rm -rf "$workdir/etc" "$workdir/persistent"
+              mkdir -p "$workdir/etc/ssh" "$workdir/persistent/etc/ssh"
+
+              printf 'same' > "$workdir/etc/ssh/ssh_host_rsa_key"
+              printf 'same' > "$workdir/persistent/etc/ssh/ssh_host_rsa_key"
+              "$helper" \
+                "$workdir/etc/ssh/ssh_host_rsa_key" \
+                "$workdir/persistent/etc/ssh/ssh_host_rsa_key" \
+                reconcile \
+                0
+              test ! -L "$workdir/etc/ssh/ssh_host_rsa_key"
+              diff "$workdir/persistent/etc/ssh/ssh_host_rsa_key" "$workdir/etc/ssh/ssh_host_rsa_key"
+
+              rm -rf "$workdir/etc" "$workdir/persistent"
+              mkdir -p "$workdir/etc/ssh" "$workdir/persistent/etc/ssh"
+
+              printf 'live' > "$workdir/etc/ssh/ssh_host_rsa_key"
+              printf 'persisted' > "$workdir/persistent/etc/ssh/ssh_host_rsa_key"
+              if "$helper" \
+                "$workdir/etc/ssh/ssh_host_rsa_key" \
+                "$workdir/persistent/etc/ssh/ssh_host_rsa_key" \
+                reconcile \
+                0; then
+                echo "expected conflicting files to fail" >&2
+                exit 1
+              fi
+
+              touch "$out"
+            '';
+
             nixos = mkTest {
               name = "nixos-persistence";
               configuration = {

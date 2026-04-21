@@ -29,23 +29,45 @@ if (( debug )); then
     set -o xtrace
 fi
 
+mountTargetFile() {
+    if [[ $method != "symlink" && -e $targetFile ]]; then
+        touch "$mountPoint"
+        mount -o bind "$targetFile" "$mountPoint"
+    else
+        ln -s "$targetFile" "$mountPoint"
+    fi
+}
+
 if [[ -L $mountPoint && $(readlink -f "$mountPoint") == "$targetFile" ]]; then
     trace "$mountPoint already links to $targetFile, ignoring"
 elif findmnt "$mountPoint" >/dev/null; then
     trace "mount already exists at $mountPoint, ignoring"
+elif [[ $method == "reconcile" && -e $mountPoint ]]; then
+    mkdir -p "$(dirname "$targetFile")"
+
+    if [[ ! -e $targetFile ]]; then
+        trace "moving existing $mountPoint to $targetFile"
+        mv "$mountPoint" "$targetFile"
+    elif cmp -s -- "$mountPoint" "$targetFile"; then
+        trace "$mountPoint already matches $targetFile, replacing with persisted mount"
+        rm -f "$mountPoint"
+    else
+        echo "Refusing to replace conflicting file at $mountPoint; $targetFile already exists with different contents." >&2
+        exit 1
+    fi
+
+    mountTargetFile
 elif [[ -s $mountPoint ]]; then
     echo "A file already exists at $mountPoint!" >&2
     exit 1
-elif [[ $method == "auto" && -e $targetFile ]]; then
-    touch "$mountPoint"
-    mount -o bind "$targetFile" "$mountPoint"
-elif [[ $method == "auto" && $mountPoint == "/etc/machine-id" ]]; then
+elif [[ $method != "symlink" && -e $targetFile ]]; then
+    mountTargetFile
+elif [[ $method != "symlink" && $mountPoint == "/etc/machine-id" ]]; then
     # Work around an issue with persisting /etc/machine-id. For more
     # details, see https://github.com/nix-community/impermanence/pull/242
     echo "Creating initial /etc/machine-id"
     echo "uninitialized" > "$targetFile"
-    touch "$mountPoint"
-    mount -o bind "$targetFile" "$mountPoint"
+    mountTargetFile
 else
-    ln -s "$targetFile" "$mountPoint"
+    mountTargetFile
 fi

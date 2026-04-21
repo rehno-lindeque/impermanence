@@ -124,13 +124,16 @@ let
               x)
           dirOpts.options;
       method = mkOption {
-        type = enum [ "auto" "symlink" ];
+        type = enum [ "auto" "reconcile" "symlink" ];
         default = "auto";
         description = ''
           The method used to link to the target file.
           `auto' will almost always do the right thing,
           thus you should only set this if the default
-          doesn't work.
+          doesn't work. `reconcile' safely adopts an
+          already-existing mount point by moving it into
+          persistent storage when the target is missing,
+          or replacing it when the contents already match.
         '';
       };
       filePath = mkOption {

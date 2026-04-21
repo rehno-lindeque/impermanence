@@ -336,9 +336,13 @@
 
        - ~method~, the method used to link the file to persistent
          storage. ~"auto"~, the default, uses a bind mount when the file
-         exists in persistent storage and a symlink
-         otherwise. ~"symlink"~ uses a symlink regardless. Only change
-         this to ~"symlink"~ if ~"auto"~ is giving you issues.
+         exists in persistent storage and a symlink otherwise.
+         ~"reconcile"~ behaves like ~"auto"~, but safely adopts an
+         already-existing file at the mount point by moving it into
+         persistent storage when the target is missing, or replacing it
+         when both files already match. ~"symlink"~ uses a symlink
+         regardless. Only change this from ~"auto"~ if it is giving you
+         issues.
 
 ****** ~users.bird~
 
