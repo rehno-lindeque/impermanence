@@ -85,9 +85,13 @@ let
 
   inherit (allPersistentStoragePaths) files directories;
 
-  mountFile = pkgs.runCommand "persistence-mount-file" { nativeBuildInputs = [ pkgs.bash ]; } ''
+  mountFile = pkgs.runCommand "persistence-mount-file"
+    {
+      nativeBuildInputs = [ pkgs.bash ];
+      runtimeInputs = [ pkgs.coreutils ];
+    } ''
     cp ${./mount-file.bash} $out
-    substituteInPlace $out --replace-fail @coreutils@ ${pkgs.coreutils}/bin
+    substituteInPlace $out --replace-fail @coreutils@ "$runtimeInputs/bin"
     patchShebangs $out
   '';
 
