@@ -10,6 +10,7 @@ shopt -s inherit_errexit  # Inherit the errexit option status in subshells.
 trap 'echo Error when executing ${BASH_COMMAND} at line ${LINENO}! >&2' ERR
 
 export PATH="@coreutils@:$PATH"
+cmp_cmd="@coreutils@/cmp"
 
 # Get inputs from command line arguments
 if [[ $# != 4 ]]; then
@@ -50,7 +51,7 @@ elif [[ $method == "reconcile" && -e $mountPoint ]]; then
     if [[ ! -e $targetFile ]]; then
         trace "moving existing $mountPoint to $targetFile"
         mv "$mountPoint" "$targetFile"
-    elif cmp -s -- "$mountPoint" "$targetFile"; then
+    elif "$cmp_cmd" -s -- "$mountPoint" "$targetFile"; then
         trace "$mountPoint already matches $targetFile, replacing with persisted mount"
         rm -f "$mountPoint"
     else
