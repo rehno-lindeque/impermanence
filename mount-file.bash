@@ -30,7 +30,7 @@ if (( debug )); then
 fi
 
 mountTargetFile() {
-    if [[ $method != "symlink" && -e $targetFile ]]; then
+    if [[ $method == "auto" && -e $targetFile ]] || [[ $method == "reconcile" ]]; then
         touch "$mountPoint"
         mount -o bind "$targetFile" "$mountPoint"
     else
@@ -60,9 +60,9 @@ elif [[ $method == "reconcile" && -e $mountPoint ]]; then
 elif [[ -s $mountPoint ]]; then
     echo "A file already exists at $mountPoint!" >&2
     exit 1
-elif [[ $method != "symlink" && -e $targetFile ]]; then
+elif [[ $method == "auto" && -e $targetFile ]] || [[ $method == "reconcile" && -e $targetFile ]]; then
     mountTargetFile
-elif [[ $method != "symlink" && $mountPoint == "/etc/machine-id" ]]; then
+elif [[ $method == "auto" && $mountPoint == "/etc/machine-id" ]] || [[ $method == "reconcile" && $mountPoint == "/etc/machine-id" ]]; then
     # Work around an issue with persisting /etc/machine-id. For more
     # details, see https://github.com/nix-community/impermanence/pull/242
     echo "Creating initial /etc/machine-id"

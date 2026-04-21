@@ -85,7 +85,7 @@ let
 
   inherit (allPersistentStoragePaths) files directories;
 
-  mountFile = pkgs.runCommand "persistence-mount-file" { buildInputs = [ pkgs.bash ]; } ''
+  mountFile = pkgs.runCommand "persistence-mount-file" { buildInputs = [ pkgs.bash pkgs.coreutils ]; } ''
     cp ${./mount-file.bash} $out
     patchShebangs $out
   '';
