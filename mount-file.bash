@@ -9,13 +9,6 @@ shopt -s inherit_errexit  # Inherit the errexit option status in subshells.
 # Print a useful trace when an error occurs
 trap 'echo Error when executing ${BASH_COMMAND} at line ${LINENO}! >&2' ERR
 
-cmp_cmd="@cmp@"
-mv_cmd="@mv@"
-mkdir_cmd="@mkdir@"
-rm_cmd="@rm@"
-touch_cmd="@touch@"
-ln_cmd="@ln@"
-
 # Get inputs from command line arguments
 if [[ $# != 4 ]]; then
     echo "Error: 'mount-file.bash' requires *four* args." >&2
@@ -38,10 +31,10 @@ fi
 
 mountTargetFile() {
     if [[ $method == "auto" && -e $targetFile ]] || [[ $method == "reconcile" ]]; then
-        "$touch_cmd" "$mountPoint"
+        touch "$mountPoint"
         mount -o bind "$targetFile" "$mountPoint"
     else
-        "$ln_cmd" -s "$targetFile" "$mountPoint"
+        ln -s "$targetFile" "$mountPoint"
     fi
 }
 
@@ -50,14 +43,14 @@ if [[ -L $mountPoint && $(readlink -f "$mountPoint") == "$targetFile" ]]; then
 elif findmnt "$mountPoint" >/dev/null; then
     trace "mount already exists at $mountPoint, ignoring"
 elif [[ $method == "reconcile" && -e $mountPoint ]]; then
-    "$mkdir_cmd" -p "$(dirname "$targetFile")"
+    mkdir -p "$(dirname "$targetFile")"
 
     if [[ ! -e $targetFile ]]; then
         trace "moving existing $mountPoint to $targetFile"
-        "$mv_cmd" "$mountPoint" "$targetFile"
-    elif "$cmp_cmd" -s -- "$mountPoint" "$targetFile"; then
+        mv "$mountPoint" "$targetFile"
+    elif cmp -s -- "$mountPoint" "$targetFile"; then
         trace "$mountPoint already matches $targetFile, replacing with persisted mount"
-        "$rm_cmd" -f "$mountPoint"
+        rm -f "$mountPoint"
     else
         echo "Refusing to replace conflicting file at $mountPoint; $targetFile already exists with different contents." >&2
         exit 1
