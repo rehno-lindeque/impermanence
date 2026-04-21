@@ -88,10 +88,9 @@ let
   mountFile = pkgs.runCommand "persistence-mount-file"
     {
       nativeBuildInputs = [ pkgs.bash ];
-      runtimeInputs = [ pkgs.coreutils ];
     } ''
     cp ${./mount-file.bash} $out
-    substituteInPlace $out --replace-fail @coreutils@ "$runtimeInputs/bin"
+    substituteInPlace $out --replace-fail @cmp@ ${lib.getExe' pkgs.diffutils "cmp"}
     patchShebangs $out
   '';
 
