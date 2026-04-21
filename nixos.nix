@@ -88,7 +88,7 @@ let
   mountFile = pkgs.writeShellApplication {
     name = "persistence-mount-file";
     runtimeInputs = [ pkgs.diffutils ];
-    text = builtins.replaceStrings ["@cmp@"] ["cmp"] (builtins.readFile ./mount-file.bash);
+    text = builtins.readFile ./mount-file.bash;
   };
 
   mkPersistFile = { filePath, persistentStoragePath, method, enableDebugging, ... }:
