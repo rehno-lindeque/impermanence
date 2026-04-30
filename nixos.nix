@@ -103,7 +103,7 @@ let
       ];
     in
     ''
-      ${mountFile} ${args}
+      ${lib.getExe mountFile} ${args}
     '';
 
   defaultPerms = {
